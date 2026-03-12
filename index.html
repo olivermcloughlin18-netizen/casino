@@ -110,6 +110,11 @@ h1 { font-size: 1.6rem; letter-spacing: 0.25em; color: #c9a84c; margin-bottom: 0
 
 <!-- GAME -->
 <div id="game">
+  <div id="share-box" style="display:none;background:#1a2a1a;border:1px solid #2a4a2a;border-radius:8px;padding:0.6rem 1.2rem;text-align:center;width:100%">
+    <div style="color:#555;font-size:0.65rem;letter-spacing:0.2em;margin-bottom:0.2rem">SHARE THIS CODE WITH FRIENDS</div>
+    <div id="share-code" style="font-size:2.2rem;letter-spacing:0.5em;color:#c9a84c;font-weight:bold"></div>
+    <button class="btn btn-grey" onclick="copyShareCode()" style="margin-top:0.4rem;font-size:0.7rem;padding:0.3rem 0.8rem">📋 COPY CODE</button>
+  </div>
   <div id="game-header">
     <span id="code-label"></span>
     <span id="phase-label">WAITING</span>
@@ -168,7 +173,7 @@ var RANKS = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
 // ═══════════════════════════
 // STATE
 // ═══════════════════════════
-var myId, myName, gameCode, tableRef, gameListener;
+var myId, myName, gameCode, tableRef, gameListener, isHosting = false;
 var localState = null;
 
 // ═══════════════════════════
@@ -281,6 +286,7 @@ function handName(cards) {
 // LOBBY
 // ═══════════════════════════
 function hostGame() {
+  isHosting = true;
   myId   = uid();
   myName = getName();
   gameCode = code();
@@ -306,6 +312,7 @@ function hostGame() {
 }
 
 function joinGame() {
+  isHosting = false;
   var c = document.getElementById('code-inp').value.trim().toUpperCase();
   if (!c) { alert('Enter a table code.'); return; }
   myId   = uid();
@@ -330,11 +337,23 @@ function showGame() {
   document.getElementById('game').style.display  = 'flex';
   document.getElementById('code-label').textContent = 'TABLE: ' + gameCode;
   document.getElementById('blinds-label').textContent = 'BLINDS $'+SMALL_BLIND+'/$'+BIG_BLIND;
+  // Show share box for host
+  if (isHosting) {
+    document.getElementById('share-box').style.display = '';
+    document.getElementById('share-code').textContent = gameCode;
+  }
 }
 
 // ═══════════════════════════
 // FIREBASE LISTENER
 // ═══════════════════════════
+function copyShareCode() {
+  navigator.clipboard && navigator.clipboard.writeText(gameCode);
+  var btn = document.querySelector('#share-box button');
+  btn.textContent = '✓ COPIED!';
+  setTimeout(function(){ btn.textContent = '📋 COPY CODE'; }, 1500);
+}
+
 function listenTable() {
   if (gameListener) tableRef.off('value', gameListener);
   gameListener = tableRef.on('value', function(snap) {
