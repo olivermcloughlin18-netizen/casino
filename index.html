@@ -7624,20 +7624,21 @@ function fbSaveProfile() {
 
 function fbLoadProfile(uid) {
   fbDb.ref('users/' + uid + '/profile').once('value').then(function(snap) {
-    var p = snap.val();
-    if (!p) {
-      // new user — start with 1000
-      balance = 1000;
-    } else {
-      balance        = p.balance       || 1000;
-      shopOwned      = p.shopOwned     || {};
-      shopActiveTheme= p.shopTheme     || null;
-      activeCasinoId = p.casinoId      || 'lucky';
-      if (p.stats)           stats            = Object.assign(stats, p.stats);
-      if (p.achieveUnlocked) achieveUnlocked  = p.achieveUnlocked;
-      if (p.insTier !== undefined) insTier    = p.insTier;
-    }
-    // mirror to localStorage
+    try {
+      var p = snap.val();
+      if (!p) {
+        balance = 1000;
+      } else {
+        balance         = (typeof p.balance === 'number') ? p.balance : 1000;
+        shopOwned       = p.shopOwned      || {};
+        shopActiveTheme = p.shopTheme      || null;
+        activeCasinoId  = p.casinoId       || 'lucky';
+        if (p.stats)            stats           = Object.assign(stats, p.stats);
+        if (p.achieveUnlocked)  achieveUnlocked = p.achieveUnlocked;
+        if (typeof p.insTier === 'number') insTier = p.insTier;
+      }
+    } catch(e) { console.error('Profile parse error:', e); balance = 1000; }
+
     try {
       localStorage.setItem('lcbal3', balance);
       localStorage.setItem('lcshop3', JSON.stringify(shopOwned));
@@ -7647,32 +7648,55 @@ function fbLoadProfile(uid) {
       localStorage.setItem('lcachieve3', JSON.stringify(achieveUnlocked));
       localStorage.setItem('lcins3', insTier);
     } catch(e){}
-    // re-apply casino/theme
-    var casino = CASINOS[activeCasinoId] || CASINOS['lucky'];
-    applyTheme(casino.theme || shopActiveTheme);
-    applyCasinoNav(casino);
-    updateCasinoHeader(casino.name);
-    // restore secret nav buttons
-    var navMap = {
-      russian_roulette:'nav-rr', street_fighting:'nav-sf', five_finger:'nav-fff',
-      street_racing:'nav-sr', death_dice:'nav-dd', sniper_duel:'nav-sd',
-      underground_poker:'nav-up', snake_gamble:'nav-snake', mine_heist:'nav-mine', buzzer_beater:'nav-bb'
-    };
-    Object.keys(navMap).forEach(function(id) {
-      var el = document.getElementById(navMap[id]);
-      if (el) el.style.display = shopOwned[id] ? '' : 'none';
-    });
-    refreshBal();
-    if (typeof insRefreshBtn === 'function') insRefreshBtn();
-    if (typeof updateLuxuryDisplay === 'function') updateLuxuryDisplay();
-    if (typeof updateCasinoSwitchBtn === 'function') updateCasinoSwitchBtn();
-    updateStreakBadge();
-    checkAchievements();
-    fbSaveProfile(); // write initial leaderboard entry
-    fbListenFriends();
-    fbListenTables();
-    fbListenLeaderboard();
-    fbSetPresence();
+
+    try {
+      var casino = (typeof CASINOS !== 'undefined' && CASINOS[activeCasinoId]) ? CASINOS[activeCasinoId] : (CASINOS ? CASINOS['lucky'] : null);
+      if (casino) {
+        if (typeof applyTheme === 'function') applyTheme(casino.theme || shopActiveTheme);
+        if (typeof applyCasinoNav === 'function') applyCasinoNav(casino);
+        if (typeof updateCasinoHeader === 'function') updateCasinoHeader(casino.name);
+      }
+    } catch(e) { console.error('Casino apply error:', e); }
+
+    try {
+      var navMap = {
+        russian_roulette:'nav-rr', street_fighting:'nav-sf', five_finger:'nav-fff',
+        street_racing:'nav-sr', death_dice:'nav-dd', sniper_duel:'nav-sd',
+        underground_poker:'nav-up', snake_gamble:'nav-snake', mine_heist:'nav-mine', buzzer_beater:'nav-bb'
+      };
+      Object.keys(navMap).forEach(function(id) {
+        var el = document.getElementById(navMap[id]);
+        if (el) el.style.display = shopOwned[id] ? '' : 'none';
+      });
+    } catch(e){}
+
+    try { refreshBal(); } catch(e){}
+    try { if (typeof insRefreshBtn === 'function') insRefreshBtn(); } catch(e){}
+    try { if (typeof updateLuxuryDisplay === 'function') updateLuxuryDisplay(); } catch(e){}
+    try { if (typeof updateCasinoSwitchBtn === 'function') updateCasinoSwitchBtn(); } catch(e){}
+    try { updateStreakBadge(); } catch(e){}
+    try { checkAchievements(); } catch(e){}
+
+    // show the casino UI
+    try {
+      document.getElementById('auth-overlay').style.display = 'none';
+      document.body.style.background = '';
+      document.body.style.color = '';
+    } catch(e){}
+
+    try { fbSaveProfile(); } catch(e){}
+    try { fbListenFriends(); } catch(e){}
+    try { fbListenTables(); } catch(e){}
+    try { fbListenLeaderboard(); } catch(e){}
+    try { fbSetPresence(); } catch(e){}
+
+    console.log('Profile loaded. Balance:', balance);
+  }).catch(function(err) {
+    console.error('fbLoadProfile failed:', err);
+    // Still show the casino even if profile load fails
+    balance = 1000;
+    try { refreshBal(); } catch(e){}
+    try { document.getElementById('auth-overlay').style.display = 'none'; } catch(e){}
   });
 }
 
