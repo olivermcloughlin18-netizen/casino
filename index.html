@@ -1160,7 +1160,7 @@ body.social-open { margin-right:240px; }
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
-const firebaseConfig = {
+var firebaseConfig = {
   apiKey: "AIzaSyDixhARbfj3QyQiK6XDg4bqQFegG-kD12g",
   authDomain: "casino-87d84.firebaseapp.com",
   databaseURL: "https://casino-87d84-default-rtdb.firebaseio.com",
@@ -1170,9 +1170,9 @@ const firebaseConfig = {
   appId: "1:1042831552945:web:1e00eeb29d6f9bd8fa8d90"
 };
 firebase.initializeApp(firebaseConfig);
-const fbAuth = firebase.auth();
-const fbDb   = firebase.database();
-const googleProvider = new firebase.auth.GoogleAuthProvider();
+var fbAuth = firebase.auth();
+var fbDb   = firebase.database();
+var googleProvider = new firebase.auth.GoogleAuthProvider();
 </script>
 </head>
 <body>
@@ -7561,6 +7561,14 @@ bbInit();
 updateStreakBadge();
 checkAchievements();
 
+function mpCopyCode() { var el=document.getElementById("mp-code-copy"); if(el&&navigator.clipboard) navigator.clipboard.writeText(el.textContent); }
+function mpInviteFriend(btn) { inviteFriend(btn.getAttribute("data-uid")); }
+function mpAcceptFriend(btn) {
+  var uid = btn.getAttribute('data-uid');
+  var name = btn.getAttribute('data-name');
+  acceptFriend(uid, name);
+}
+
 // ═══════════════════════════════════════════════════════════════
 // FIREBASE AUTH + PROFILE SYNC
 // ═══════════════════════════════════════════════════════════════
@@ -7753,7 +7761,7 @@ function fbListenFriends() {
       var row = document.createElement('div');
       row.className = 'friend-row';
       row.innerHTML = '<span class="friend-name">' + (r.from||'?') + '</span>' +
-        '<button onclick="acceptFriend('' + uid + '','' + (r.from||'?') + '')" style="background:#0a0a0a;border:1px solid #1a3a1a;color:#00ff88;border-radius:3px;padding:0.15rem 0.4rem;cursor:pointer;font-family:Bebas Neue,sans-serif;font-size:0.65rem">ACCEPT</button>';
+        '<button onclick="mpAcceptFriend(this)" data-uid="' + uid + '" data-name="' + (r.from||'?').replace(/"/g,'') + '" style="background:#0a0a0a;border:1px solid #1a3a1a;color:#00ff88;border-radius:3px;padding:0.15rem 0.4rem;cursor:pointer;font-family:Bebas Neue,sans-serif;font-size:0.65rem">ACCEPT</button>';
       listEl.appendChild(row);
     });
     // show notif dot
@@ -7775,7 +7783,7 @@ function fbListenFriends() {
         row.className = 'friend-row';
         row.innerHTML = '<span class="friend-status ' + (online?'online':'offline') + '"></span>' +
           '<span class="friend-name">' + (f.name||'?') + '</span>' +
-          '<button onclick="inviteFriend('' + uid + '')" style="background:none;border:1px solid #2a1a0a;color:#555;border-radius:3px;padding:0.15rem 0.4rem;cursor:pointer;font-family:Bebas Neue,sans-serif;font-size:0.6rem">INVITE</button>';
+          '<button onclick="mpInviteFriend(this)" data-uid="' + uid + '" style="background:none;border:1px solid #2a1a0a;color:#555;border-radius:3px;padding:0.15rem 0.4rem;cursor:pointer;font-family:Bebas Neue,sans-serif;font-size:0.6rem">INVITE</button>';
         listEl.appendChild(row);
       });
     });
@@ -7985,104 +7993,131 @@ function renderTableOverlay(t, tableId) {
   var isHost = t.host === fbUid;
   var myData = players[fbUid] || {};
   var isMyTurn = t.turn === fbUid;
+  // store tableId globally so onclick buttons don't need to pass it
+  currentTableId = tableId;
 
-  var html = '<div class="mp-table-header">' +
-    '<div>' +
-      '<div class="mp-table-title">' + t.game.toUpperCase() + ' TABLE</div>' +
-      '<div class="mp-table-code">CODE: <span onclick="navigator.clipboard&&navigator.clipboard.writeText('' + t.code + '')">' + t.code + '</span> (tap to copy)</div>' +
-    '</div>' +
-    '<button class="mp-action-btn danger" onclick="closeTableOverlay()">✕ LEAVE</button>' +
-  '</div>' +
-  '<div id="mp-table-inner">';
+  var parts = [];
+  parts.push('<div class="mp-table-header">');
+  parts.push('<div>');
+  parts.push('<div class="mp-table-title">' + t.game.toUpperCase() + ' TABLE</div>');
+  parts.push('<div class="mp-table-code">CODE: <span id="mp-code-copy" style="cursor:pointer" onclick="mpCopyCode()">' + t.code + '</span> (tap to copy)</div>');
+  parts.push('</div>');
+  parts.push('<button class="mp-action-btn danger" onclick="closeTableOverlay()">✕ LEAVE</button>');
+  parts.push('</div>');
+  parts.push('<div id="mp-table-inner">');
 
   // seats
-  html += '<div class="mp-seat-row">';
+  parts.push('<div class="mp-seat-row">');
   Object.keys(players).forEach(function(uid) {
     var p = players[uid];
     var isMe = uid === fbUid;
     var isTurn = t.turn === uid;
-    html += '<div class="mp-seat ' + (isMe?'mp-seat-you':'') + (p.isBot?' mp-seat-bot':'') + '" style="' + (isTurn?'border-color:#00ff88':'') + '">';
-    html += '<div class="mp-seat-name">' + (p.name||'?') + (isMe?' (YOU)':'') + (p.isBot?' 🤖':'') + '</div>';
-    html += '<div class="mp-seat-bal">$' + (p.balance||0).toLocaleString() + '</div>';
-    if (p.bet) html += '<div class="mp-seat-chips">BET: $' + p.bet.toLocaleString() + '</div>';
-    // show cards
+    var seatStyle = isTurn ? 'border-color:#00ff88' : '';
+    var seatClass = 'mp-seat' + (isMe ? ' mp-seat-you' : '') + (p.isBot ? ' mp-seat-bot' : '');
+    parts.push('<div class="' + seatClass + '" style="' + seatStyle + '">');
+    parts.push('<div class="mp-seat-name">' + (p.name||'?') + (isMe ? ' (YOU)' : '') + (p.isBot ? ' 🤖' : '') + '</div>');
+    parts.push('<div class="mp-seat-bal">$' + (p.balance||0).toLocaleString() + '</div>');
+    if (p.bet) parts.push('<div class="mp-seat-chips">BET: $' + p.bet.toLocaleString() + '</div>');
     if (p.cards && p.cards.length) {
-      html += '<div class="mp-seat-cards">';
+      parts.push('<div class="mp-seat-cards">');
       p.cards.forEach(function(card) {
         var hidden = card === '??' || (uid !== fbUid && t.phase !== 'showdown');
-        var red = !hidden && (card.slice(-1)==='♥'||card.slice(-1)==='♦');
-        html += '<div class="mp-card' + (hidden?' hidden':'') + (red?' red':'') + '">' + (hidden?'🂠':card) + '</div>';
+        var red = !hidden && (card.slice(-1) === '♥' || card.slice(-1) === '♦');
+        var cls = 'mp-card' + (hidden ? ' hidden' : '') + (red ? ' red' : '');
+        parts.push('<div class="' + cls + '">' + (hidden ? '🂠' : card) + '</div>');
       });
-      html += '</div>';
+      parts.push('</div>');
     }
-    if (p.folded) html += '<div style="font-family:Space Mono,monospace;font-size:0.6rem;color:#444;margin-top:3px">FOLDED</div>';
-    html += '</div>';
+    if (p.folded) parts.push('<div style="font-family:Space Mono,monospace;font-size:0.6rem;color:#444;margin-top:3px">FOLDED</div>');
+    parts.push('</div>');
   });
-  html += '</div>';
+  parts.push('</div>');
 
   // community cards
   if (t.community && t.community.length) {
-    html += '<div style="margin:0.5rem 0;font-family:Bebas Neue,sans-serif;font-size:0.7rem;color:#555;letter-spacing:0.1em">COMMUNITY</div>';
-    html += '<div class="mp-seat-cards">';
+    parts.push('<div style="margin:0.5rem 0;font-family:Bebas Neue,sans-serif;font-size:0.7rem;color:#555;letter-spacing:0.1em">COMMUNITY</div>');
+    parts.push('<div class="mp-seat-cards">');
     t.community.forEach(function(c) {
-      var red = c.slice(-1)==='♥'||c.slice(-1)==='♦';
-      html += '<div class="mp-card' + (red?' red':'') + '">' + c + '</div>';
+      var red = c.slice(-1) === '♥' || c.slice(-1) === '♦';
+      parts.push('<div class="mp-card' + (red ? ' red' : '') + '">' + c + '</div>');
     });
-    html += '</div>';
+    parts.push('</div>');
   }
 
-  // pot
-  if (t.pot) html += '<div class="mp-pot-display">POT: $' + t.pot.toLocaleString() + '</div>';
+  // dealer cards (blackjack)
+  if (t.dealerCards && t.dealerCards.length) {
+    parts.push('<div style="margin:0.5rem 0;font-family:Bebas Neue,sans-serif;font-size:0.7rem;color:#555;letter-spacing:0.1em">DEALER</div>');
+    parts.push('<div class="mp-seat-cards">');
+    t.dealerCards.forEach(function(c) {
+      var hidden = c === '??';
+      var red = !hidden && (c.slice(-1) === '♥' || c.slice(-1) === '♦');
+      parts.push('<div class="mp-card' + (hidden ? ' hidden' : '') + (red ? ' red' : '') + '">' + (hidden ? '🂠' : c) + '</div>');
+    });
+    parts.push('</div>');
+  }
 
-  // turn indicator
+  if (t.pot) parts.push('<div class="mp-pot-display">POT: $' + t.pot.toLocaleString() + '</div>');
+
   if (t.status === 'playing') {
     var turnName = t.turn && players[t.turn] ? players[t.turn].name : '?';
-    html += '<div class="mp-turn-indicator">' + (isMyTurn ? '▶ YOUR TURN' : turnName + "'s turn...") + '</div>';
+    parts.push('<div class="mp-turn-indicator">' + (isMyTurn ? '▶ YOUR TURN' : turnName + "'s turn...") + '</div>');
   }
 
   // game log
-  html += '<div class="mp-game-log" id="mp-game-log">';
+  parts.push('<div class="mp-game-log" id="mp-game-log">');
   if (t.log) {
     var logArr = typeof t.log === 'object' ? Object.values(t.log) : t.log;
-    logArr.slice(-20).forEach(function(line) {
-      html += '<div class="mp-log-line' + (line.important?' important':'') + '">' + line.text + '</div>';
+    logArr.slice(-20).forEach(function(entry) {
+      var cls = 'mp-log-line' + (entry.important ? ' important' : '');
+      parts.push('<div class="' + cls + '">' + entry.text + '</div>');
     });
   }
-  html += '</div>';
+  parts.push('</div>');
 
-  // action buttons
-  html += '<div class="mp-action-bar">';
+  // action buttons — all use currentTableId, no need to pass tableId in onclick
+  parts.push('<div class="mp-action-bar">');
   if (t.status === 'waiting') {
     if (isHost) {
-      html += '<button class="mp-action-btn primary" onclick="startMultiplayerGame('' + tableId + '')">▶ START GAME</button>';
-      html += '<button class="mp-action-btn" onclick="addBot('' + tableId + '')">🤖 ADD BOT</button>';
+      parts.push('<button class="mp-action-btn primary" onclick="mpStartCurrent()">▶ START GAME</button>');
+      parts.push('<button class="mp-action-btn" onclick="mpAddBotCurrent()">🤖 ADD BOT</button>');
     } else {
-      html += '<span style="font-family:Space Mono,monospace;font-size:0.65rem;color:#555">Waiting for host to start...</span>';
+      parts.push('<span style="font-family:Space Mono,monospace;font-size:0.65rem;color:#555">Waiting for host to start...</span>');
     }
   } else if (t.status === 'playing' && isMyTurn && !myData.folded) {
     var game = t.game;
     if (game === 'holdem') {
-      html += '<button class="mp-action-btn primary" onclick="mpAction('' + tableId + '','call')">CALL $' + (t.currentBet||0).toLocaleString() + '</button>';
-      html += '<button class="mp-action-btn" onclick="mpAction('' + tableId + '','check')">CHECK</button>';
-      html += '<button class="mp-action-btn" onclick="mpRaise('' + tableId + '')">RAISE</button>';
-      html += '<button class="mp-action-btn danger" onclick="mpAction('' + tableId + '','fold')">FOLD</button>';
+      parts.push('<button class="mp-action-btn primary" onclick="mpDoCall()">CALL $' + (t.currentBet||0).toLocaleString() + '</button>');
+      parts.push('<button class="mp-action-btn" onclick="mpDoCheck()">CHECK</button>');
+      parts.push('<button class="mp-action-btn" onclick="mpDoRaise()">RAISE</button>');
+      parts.push('<button class="mp-action-btn danger" onclick="mpDoFold()">FOLD</button>');
     } else if (game === 'bj') {
-      html += '<button class="mp-action-btn primary" onclick="mpAction('' + tableId + '','hit')">HIT</button>';
-      html += '<button class="mp-action-btn" onclick="mpAction('' + tableId + '','stand')">STAND</button>';
+      parts.push('<button class="mp-action-btn primary" onclick="mpDoHit()">HIT</button>');
+      parts.push('<button class="mp-action-btn" onclick="mpDoStand()">STAND</button>');
     } else if (game === 'war') {
-      html += '<button class="mp-action-btn primary" onclick="mpAction('' + tableId + '','draw')">DRAW CARD</button>';
+      parts.push('<button class="mp-action-btn primary" onclick="mpDoDraw()">DRAW CARD</button>');
     }
   } else if (t.status === 'finished') {
-    if (isHost) html += '<button class="mp-action-btn primary" onclick="rematch('' + tableId + '')">↺ REMATCH</button>';
-    html += '<button class="mp-action-btn" onclick="closeTableOverlay()">BACK TO CASINO</button>';
+    if (isHost) parts.push('<button class="mp-action-btn primary" onclick="mpDoRematch()">↺ REMATCH</button>');
+    parts.push('<button class="mp-action-btn" onclick="closeTableOverlay()">BACK TO CASINO</button>');
   }
-  html += '</div></div>';
+  parts.push('</div></div>');
 
-  el.innerHTML = html;
-  // scroll log to bottom
+  el.innerHTML = parts.join('');
   var logEl = document.getElementById('mp-game-log');
   if (logEl) logEl.scrollTop = logEl.scrollHeight;
 }
+
+// Thin wrappers so onclick buttons need no arguments
+function mpStartCurrent()  { startMultiplayerGame(currentTableId); }
+function mpAddBotCurrent() { addBot(currentTableId); }
+function mpDoCall()        { mpAction(currentTableId, 'call'); }
+function mpDoCheck()       { mpAction(currentTableId, 'check'); }
+function mpDoRaise()       { mpRaise(currentTableId); }
+function mpDoFold()        { mpAction(currentTableId, 'fold'); }
+function mpDoHit()         { mpAction(currentTableId, 'hit'); }
+function mpDoStand()       { mpAction(currentTableId, 'stand'); }
+function mpDoDraw()        { mpAction(currentTableId, 'draw'); }
+function mpDoRematch()     { rematch(currentTableId); }
 
 // ── Deck helpers ──
 function buildDeck() {
@@ -8158,7 +8193,7 @@ function startMultiplayerGame(tableId) {
       });
       updates['deck'] = deckCopy;
       updates['turn'] = pids[0];
-      addLog(tableId, 'Hold'em started! Blinds: $' + t.minBet, true);
+      addLog(tableId, "Hold'em started! Blinds: $" + t.minBet, true);
     } else if (t.game === 'bj') {
       var deckCopy = deck.slice();
       pids.forEach(function(uid) {
