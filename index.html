@@ -1155,25 +1155,8 @@ body.theme-diamond .amount { background: linear-gradient(135deg,#b0d4ff,#ffffff)
 body.social-open { margin-right:240px; }
 
 </style>
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script>
-var firebaseConfig = {
-  apiKey: "AIzaSyDixhARbfj3QyQiK6XDg4bqQFegG-kD12g",
-  authDomain: "casino-87d84.firebaseapp.com",
-  databaseURL: "https://casino-87d84-default-rtdb.firebaseio.com",
-  projectId: "casino-87d84",
-  storageBucket: "casino-87d84.firebasestorage.app",
-  messagingSenderId: "1042831552945",
-  appId: "1:1042831552945:web:1e00eeb29d6f9bd8fa8d90"
-};
-firebase.initializeApp(firebaseConfig);
-var fbAuth = firebase.auth();
-var fbDb   = firebase.database();
-var googleProvider = new firebase.auth.GoogleAuthProvider();
-</script>
+
+
 </head>
 <body>
 
@@ -2650,6 +2633,43 @@ var googleProvider = new firebase.auth.GoogleAuthProvider();
 </div>
 
 <script>
+// Firebase init (SDKs loaded via defer scripts below)
+var fbAuth, fbDb, googleProvider;
+function initFirebase() {
+  if (typeof firebase === "undefined") { setTimeout(initFirebase, 50); return; }
+  var firebaseConfig = {
+    apiKey: "AIzaSyDixhARbfj3QyQiK6XDg4bqQFegG-kD12g",
+    authDomain: "casino-87d84.firebaseapp.com",
+    databaseURL: "https://casino-87d84-default-rtdb.firebaseio.com",
+    projectId: "casino-87d84",
+    storageBucket: "casino-87d84.firebasestorage.app",
+    messagingSenderId: "1042831552945",
+    appId: "1:1042831552945:web:1e00eeb29d6f9bd8fa8d90"
+  };
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  fbAuth = firebase.auth();
+  fbDb   = firebase.database();
+  googleProvider = new firebase.auth.GoogleAuthProvider();
+  // Set up auth state listener now that firebase is ready
+  fbAuth.onAuthStateChanged(function(user) {
+    if (user) {
+      fbUser = user;
+      fbUid  = user.uid;
+      document.getElementById("auth-overlay").style.display = "none";
+      document.getElementById("social-sidebar").style.display = "flex";
+      document.getElementById("social-toggle-btn").style.display = "block";
+      document.getElementById("social-user-name").textContent = user.displayName || "Player";
+      fbLoadProfile(user.uid);
+    } else {
+      fbUser = null; fbUid = null;
+      document.getElementById("auth-overlay").style.display = "flex";
+      document.getElementById("social-sidebar").style.display = "none";
+      document.getElementById("social-toggle-btn").style.display = "none";
+    }
+  });
+}
+window.addEventListener("load", initFirebase);
+
 var balance = 0;
 try { var s = localStorage.getItem('lcbal3'); if (s) balance = parseInt(s); } catch(e){}
 
@@ -7688,22 +7708,7 @@ function authSignOut() {
   fbAuth.signOut();
 }
 
-fbAuth.onAuthStateChanged(function(user) {
-  if (user) {
-    fbUser = user;
-    fbUid  = user.uid;
-    document.getElementById('auth-overlay').style.display = 'none';
-    document.getElementById('social-sidebar').style.display = 'flex';
-    document.getElementById('social-toggle-btn').style.display = 'block';
-    document.getElementById('social-user-name').textContent = user.displayName || 'Player';
-    fbLoadProfile(user.uid);
-  } else {
-    fbUser = null; fbUid = null;
-    document.getElementById('auth-overlay').style.display = 'flex';
-    document.getElementById('social-sidebar').style.display = 'none';
-    document.getElementById('social-toggle-btn').style.display = 'none';
-  }
-});
+// auth listener moved to initFirebase()
 
 // ═══════════════════════════════════════════════════════════════
 // SOCIAL SIDEBAR
@@ -8528,5 +8533,9 @@ fbDb && setInterval(function() {
 }, 2000);
 
 </script>
+<!-- Firebase SDKs (loaded last to avoid blocking) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 </body>
 </html>
