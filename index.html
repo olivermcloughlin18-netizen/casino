@@ -7687,11 +7687,17 @@ function fbLoadProfile(uid) {
     try { updateStreakBadge(); } catch(e){}
     try { checkAchievements(); } catch(e){}
 
+    // show first game so screen isn't black
+    try {
+      var _casino = CASINOS[activeCasinoId] || CASINOS['lucky'];
+      var _firstGame = _casino.games[0];
+      var _firstBtn = document.querySelector('nav .nav-btn[data-game="' + _firstGame + '"]');
+      showGame(_firstGame, _firstBtn);
+    } catch(e) { console.error('showGame after login failed:', e); }
+
     // show the casino UI
     try {
       document.getElementById('auth-overlay').style.display = 'none';
-      document.body.style.background = '';
-      document.body.style.color = '';
     } catch(e){}
 
     try { fbSaveProfile(); } catch(e){}
