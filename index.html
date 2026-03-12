@@ -10,6 +10,7 @@
 <style>
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #060606; color: #fff; }
 
 body {
   font-family: 'Space Mono', monospace;
@@ -1161,7 +1162,7 @@ body.social-open { margin-right:240px; }
 <body>
 
 <!-- ══ AUTH OVERLAY ══ -->
-<div id="auth-overlay" style="position:fixed;inset:0;background:#060606;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;">
+<div id="auth-overlay" style="position:fixed;inset:0;background:#060606;z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;">
   <div style="font-size:3rem;margin-bottom:0.5rem">♠</div>
   <h1 style="font-size:2.6rem;color:#ff5000;letter-spacing:0.2em;margin-bottom:0.2rem">OLI'S CASINO</h1>
   <p style="color:#333;font-size:0.68rem;letter-spacing:0.3em;margin-bottom:2.5rem">ONLINE · MULTIPLAYER · REAL ACCOUNTS</p>
@@ -2650,9 +2651,13 @@ function initFirebase() {
   fbAuth = firebase.auth();
   fbDb   = firebase.database();
   googleProvider = new firebase.auth.GoogleAuthProvider();
-  // Set up auth state listener now that firebase is ready
+  // Set up auth state listener
+  // Firebase fires onAuthStateChanged immediately with null, then again with the user.
+  // We delay showing the sign-in screen by 2s to avoid a flash if they're already signed in.
+  var fbAuthResolved = false;
   fbAuth.onAuthStateChanged(function(user) {
     if (user) {
+      fbAuthResolved = true;
       fbUser = user;
       fbUid  = user.uid;
       document.getElementById("auth-overlay").style.display = "none";
@@ -2662,9 +2667,14 @@ function initFirebase() {
       fbLoadProfile(user.uid);
     } else {
       fbUser = null; fbUid = null;
-      document.getElementById("auth-overlay").style.display = "flex";
-      document.getElementById("social-sidebar").style.display = "none";
-      document.getElementById("social-toggle-btn").style.display = "none";
+      // Only show sign-in screen after a short delay — avoids flash on page load
+      setTimeout(function() {
+        if (!fbAuthResolved) {
+          document.getElementById("auth-overlay").style.display = "flex";
+          document.getElementById("social-sidebar").style.display = "none";
+          document.getElementById("social-toggle-btn").style.display = "none";
+        }
+      }, 800);
     }
   });
 }
