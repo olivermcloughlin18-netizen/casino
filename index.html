@@ -69,20 +69,52 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .lb-empty{padding:28px;text-align:center;font-size:11px;color:var(--muted);letter-spacing:2px}
 
 /* SHOP */
-.shop-coins{display:flex;align-items:center;gap:8px;justify-content:center;padding:10px;background:var(--panel);border:1px solid var(--border);border-radius:4px;font-family:var(--fd);font-size:14px;color:var(--yellow);letter-spacing:2px}
+.shop-topbar{display:flex;align-items:center;gap:8px;width:100%;margin-bottom:2px}
+.shop-back{background:transparent;border:1px solid var(--border);border-radius:3px;padding:5px 10px;font-family:var(--fm);font-size:10px;color:var(--muted);cursor:pointer;letter-spacing:1px;transition:all .15s;flex-shrink:0}
+.shop-back:hover{border-color:var(--cyan);color:var(--cyan)}
+.shop-coins{display:flex;align-items:center;gap:6px;flex:1;justify-content:flex-end;padding:6px 10px;background:var(--panel);border:1px solid var(--border);border-radius:4px;font-family:var(--fd);font-size:13px;color:var(--yellow);letter-spacing:2px}
+.shop-cats{display:flex;gap:4px;width:100%;overflow-x:auto;padding-bottom:2px}
+.shop-cats::-webkit-scrollbar{display:none}
+.shop-cat{flex-shrink:0;padding:6px 12px;background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:9px;letter-spacing:2px;color:var(--muted);cursor:pointer;transition:all .15s}
+.shop-cat:hover{border-color:var(--cyan-dim);color:var(--text)}
+.shop-cat.active{background:rgba(0,245,255,.08);border-color:var(--cyan);color:var(--cyan)}
+.shop-section-label{font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;width:100%;padding:4px 0 6px;border-bottom:1px solid var(--border);margin-bottom:4px}
 .shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
-.shop-item{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px;cursor:pointer;transition:all .15s;text-align:center;position:relative}
+.shop-item{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px;cursor:pointer;transition:all .15s;text-align:center;position:relative;overflow:hidden}
+.shop-item::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,245,255,.03),transparent);opacity:0;transition:opacity .15s}
 .shop-item:hover:not(.owned):not(.cant-afford){border-color:var(--cyan);background:rgba(0,245,255,.04)}
-.shop-item.owned{border-color:var(--green);opacity:.7;cursor:default}
-.shop-item.equipped{border-color:var(--yellow);box-shadow:0 0 8px rgba(255,229,0,.2)}
-.shop-item.cant-afford{opacity:.4;cursor:not-allowed}
-.si-icon{font-size:24px;margin-bottom:4px}
+.shop-item:hover:not(.owned):not(.cant-afford)::before{opacity:1}
+.shop-item.owned{border-color:rgba(0,255,136,.3);cursor:default}
+.shop-item.equipped{border-color:var(--yellow);box-shadow:0 0 10px rgba(255,229,0,.15)}
+.shop-item.cant-afford{opacity:.35;cursor:not-allowed}
+.shop-item.rare{border-color:rgba(170,68,255,.3)}
+.shop-item.rare:hover:not(.owned):not(.cant-afford){border-color:#aa44ff;background:rgba(170,68,255,.04)}
+.shop-item.legendary{border-color:rgba(255,140,0,.3)}
+.shop-item.legendary:hover:not(.owned):not(.cant-afford){border-color:var(--orange);background:rgba(255,140,0,.04)}
+.si-icon{font-size:26px;margin-bottom:5px}
 .si-name{font-family:var(--fd);font-size:9px;letter-spacing:2px;color:var(--text);margin-bottom:3px}
-.si-desc{font-size:9px;color:var(--muted);line-height:1.4;margin-bottom:6px}
+.si-desc{font-size:9px;color:var(--muted);line-height:1.5;margin-bottom:6px}
 .si-cost{font-family:var(--fd);font-size:10px;color:var(--yellow)}
+.si-rarity{font-size:8px;letter-spacing:1px;margin-bottom:3px}
+.si-rarity.common{color:#888}
+.si-rarity.rare{color:#aa44ff}
+.si-rarity.legendary{color:var(--orange)}
 .si-badge{position:absolute;top:6px;right:6px;font-size:8px;letter-spacing:1px;padding:2px 5px;border-radius:2px}
 .si-badge.owned-badge{background:rgba(0,255,136,.15);color:var(--green);border:1px solid rgba(0,255,136,.3)}
 .si-badge.eq-badge{background:rgba(255,229,0,.15);color:var(--yellow);border:1px solid rgba(255,229,0,.3)}
+/* confirm modal */
+.shop-modal{position:fixed;inset:0;background:rgba(5,5,8,.85);backdrop-filter:blur(6px);z-index:500;display:none;align-items:center;justify-content:center}
+.shop-modal.open{display:flex}
+.shop-modal-box{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:24px;max-width:280px;width:90%;text-align:center;display:flex;flex-direction:column;gap:14px}
+.sm-icon{font-size:36px}
+.sm-name{font-family:var(--fd);font-size:12px;letter-spacing:3px;color:var(--cyan)}
+.sm-desc{font-size:10px;color:var(--muted);line-height:1.6}
+.sm-cost{font-family:var(--fd);font-size:18px;color:var(--yellow)}
+.sm-btns{display:flex;gap:8px}
+.sm-btn{flex:1;padding:10px;background:transparent;border:1px solid var(--border);border-radius:4px;font-family:var(--fm);font-size:10px;letter-spacing:2px;color:var(--muted);cursor:pointer;transition:all .15s}
+.sm-btn.confirm{border-color:var(--cyan);color:var(--cyan)}
+.sm-btn.confirm:hover{background:var(--cyan);color:var(--bg)}
+.sm-btn.cancel:hover{border-color:var(--red);color:var(--red)}
 
 /* FIREBASE CONFIG */
 .config-toggle{font-size:10px;color:var(--cyan-dim);cursor:pointer;letter-spacing:1px;text-decoration:underline;text-underline-offset:3px}
@@ -183,12 +215,19 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 
   <!-- SHOP TAB -->
   <div class="tab-panel" id="tab-shop">
-    <div class="shop-coins">⬡ <span id="shop-coin-display">0</span> COINS</div>
+    <div class="shop-topbar">
+      <button class="shop-back" onclick="switchTab('lb')">← BACK</button>
+      <div class="shop-coins">⬡ <span id="shop-coin-display">0</span> COINS</div>
+    </div>
+    <div class="shop-cats" id="shop-cats"></div>
     <div class="shop-grid" id="shop-grid"></div>
   </div>
 
   <!-- FIREBASE TAB -->
   <div class="tab-panel" id="tab-fb">
+    <div class="shop-topbar">
+      <button class="shop-back" onclick="switchTab('lb')">← BACK</button>
+    </div>
     <div class="config-panel">
       <div class="config-title">Firebase Realtime Database</div>
       <div class="config-row">
@@ -203,7 +242,19 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
         <span class="config-label">Project ID</span>
         <input class="config-input" id="cfg-proj" placeholder="my-project-id">
       </div>
+      <div style="height:1px;background:var(--border);margin:4px 0"></div>
+      <div class="config-row">
+        <span class="config-label" style="color:var(--orange)">Creator Pass</span>
+        <input class="config-input" id="cfg-pass" type="password" placeholder="Admin only" style="border-color:rgba(255,140,0,.3)">
+      </div>
+      <div id="cfg-pass-status" style="font-size:9px;color:var(--muted);text-align:center;letter-spacing:1px"></div>
       <button class="config-save" onclick="saveFirebaseConfig()">Save &amp; Connect</button>
+      <div id="admin-panel" style="display:none;flex-direction:column;gap:8px">
+        <div style="font-size:9px;letter-spacing:2px;color:var(--orange);text-align:center;border-top:1px solid rgba(255,140,0,.2);padding-top:8px">⬡ ADMIN PANEL</div>
+        <button class="config-save" style="border-color:var(--red);color:var(--red)" onclick="adminClearBoard()">Clear Leaderboard</button>
+        <button class="config-save" style="border-color:var(--orange);color:var(--orange)" onclick="adminResetScores()">Reset Local Scores</button>
+        <div id="admin-log" style="font-size:9px;color:var(--muted);text-align:center;min-height:14px"></div>
+      </div>
       <div class="fb-note">
         <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> → Realtime Database → Create → Test mode<br>
         Scores saved locally without Firebase.
@@ -249,6 +300,20 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
   </div>
 </div>
 
+<!-- SHOP CONFIRM MODAL -->
+<div class="shop-modal" id="shop-modal">
+  <div class="shop-modal-box">
+    <div class="sm-icon" id="sm-icon">?</div>
+    <div class="sm-name" id="sm-name"></div>
+    <div class="sm-desc" id="sm-desc"></div>
+    <div class="sm-cost" id="sm-cost"></div>
+    <div class="sm-btns">
+      <button class="sm-btn cancel" onclick="closeShopModal()">CANCEL</button>
+      <button class="sm-btn confirm" id="sm-confirm" onclick="confirmPurchase()">BUY</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
@@ -257,15 +322,37 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 // ═══════════════════════════════════
 //  SHOP DATA
 // ═══════════════════════════════════
+// rarity: common | rare | legendary
+// type: passive | skin | trail | effect
+// cat: upgrades | ships | trails | effects
 const SHOP_ITEMS = [
-  { id:'shield',    icon:'🛡',  name:'SHIELD',       desc:'Start with 4 lives instead of 3',   cost:80,  type:'passive' },
-  { id:'magnet',    icon:'🧲',  name:'MAGNET',       desc:'Auto-collect nearby coins',          cost:120, type:'passive' },
-  { id:'slowmo',    icon:'⏱',  name:'TIME SLOW',    desc:'Hazards fall 30% slower',            cost:150, type:'passive' },
-  { id:'boostplus', icon:'⚡',  name:'BOOST+',       desc:'Boost bar is 50% larger',            cost:100, type:'passive' },
-  { id:'ship2',     icon:'🚀',  name:'SHIP ALPHA',   desc:'Sleek red ship skin',                cost:60,  type:'skin' },
-  { id:'ship3',     icon:'💠',  name:'SHIP PRISM',   desc:'Rainbow prismatic ship',             cost:200, type:'skin' },
-  { id:'trail2',    icon:'🔥',  name:'FIRE TRAIL',   desc:'Orange fire particle trail',         cost:80,  type:'skin' },
-  { id:'trail3',    icon:'🌊',  name:'WAVE TRAIL',   desc:'Blue wave trail effect',             cost:80,  type:'skin' },
+  // ── UPGRADES ──
+  { id:'shield',     icon:'🛡',  name:'SHIELD',        desc:'Start with 4 lives instead of 3',                cost:80,   type:'passive', cat:'upgrades', rarity:'common'    },
+  { id:'magnet',     icon:'🧲',  name:'MAGNET',         desc:'Auto-collect coins within 50px',                 cost:120,  type:'passive', cat:'upgrades', rarity:'common'    },
+  { id:'slowmo',     icon:'⏱',  name:'TIME WARP',      desc:'Hazards fall 30% slower all game',               cost:150,  type:'passive', cat:'upgrades', rarity:'rare'      },
+  { id:'boostplus',  icon:'⚡',  name:'BOOST+',         desc:'Boost bar is 50% larger',                        cost:100,  type:'passive', cat:'upgrades', rarity:'common'    },
+  { id:'extralife',  icon:'💎',  name:'EXTRA LIFE',     desc:'Start every run with +1 extra life',             cost:200,  type:'passive', cat:'upgrades', rarity:'rare'      },
+  { id:'coinboost',  icon:'💰',  name:'GOLD RUSH',      desc:'Coins worth 2x during every run',                cost:180,  type:'passive', cat:'upgrades', rarity:'rare'      },
+  { id:'narrowguard',icon:'🔰',  name:'WALL GUARD',     desc:'Corridor narrows 20% slower',                    cost:160,  type:'passive', cat:'upgrades', rarity:'rare'      },
+  { id:'startboost', icon:'🚀',  name:'LAUNCH',         desc:'Start each run with full boost',                 cost:90,   type:'passive', cat:'upgrades', rarity:'common'    },
+  { id:'hazardshield',icon:'🔮', name:'VOID FIELD',     desc:'First hazard hit each run is ignored',           cost:350,  type:'passive', cat:'upgrades', rarity:'legendary' },
+  { id:'scoremult',  icon:'✖',  name:'SCORE×2',        desc:'All score gains doubled (no leaderboard effect)', cost:400,  type:'passive', cat:'upgrades', rarity:'legendary' },
+  // ── SHIPS ──
+  { id:'ship_default',icon:'🔷', name:'DEFAULT',        desc:'The classic void runner',                        cost:0,    type:'skin',    cat:'ships',    rarity:'common'    },
+  { id:'ship2',      icon:'🔴',  name:'SHIP ALPHA',     desc:'Sleek red fighter skin',                         cost:60,   type:'skin',    cat:'ships',    rarity:'common'    },
+  { id:'ship3',      icon:'💠',  name:'SHIP PRISM',     desc:'Rainbow color-shifting hull',                    cost:200,  type:'skin',    cat:'ships',    rarity:'rare'      },
+  { id:'ship4',      icon:'🟡',  name:'SHIP GOLD',      desc:'Gleaming gold hull',                             cost:300,  type:'skin',    cat:'ships',    rarity:'rare'      },
+  { id:'ship5',      icon:'⬛',  name:'SHIP DARK',      desc:'Invisible stealth silhouette',                   cost:500,  type:'skin',    cat:'ships',    rarity:'legendary' },
+  // ── TRAILS ──
+  { id:'trail_default',icon:'🔵',name:'DEFAULT',        desc:'Standard cyan trail',                            cost:0,    type:'trail',   cat:'trails',   rarity:'common'    },
+  { id:'trail2',     icon:'🔥',  name:'FIRE',           desc:'Orange fire particle stream',                    cost:80,   type:'trail',   cat:'trails',   rarity:'common'    },
+  { id:'trail3',     icon:'🌊',  name:'WAVE',           desc:'Blue rippling wave trail',                       cost:80,   type:'trail',   cat:'trails',   rarity:'common'    },
+  { id:'trail4',     icon:'⚡',  name:'LIGHTNING',      desc:'Electric yellow spark trail',                    cost:120,  type:'trail',   cat:'trails',   rarity:'rare'      },
+  { id:'trail5',     icon:'🌈',  name:'RAINBOW',        desc:'Full spectrum color trail',                      cost:250,  type:'trail',   cat:'trails',   rarity:'legendary' },
+  // ── EFFECTS ──
+  { id:'fx_explode', icon:'💥',  name:'BIG BOOM',       desc:'Larger death explosion particles',               cost:60,   type:'effect',  cat:'effects',  rarity:'common'    },
+  { id:'fx_ghost',   icon:'👻',  name:'GHOST MODE',     desc:'Ship becomes semi-transparent',                  cost:100,  type:'effect',  cat:'effects',  rarity:'rare'      },
+  { id:'fx_screen',  icon:'📺',  name:'GLITCH SCREEN',  desc:'Screen glitch effect at high speed',             cost:140,  type:'effect',  cat:'effects',  rarity:'rare'      },
 ];
 
 // ═══════════════════════════════════
@@ -285,46 +372,103 @@ function getEquippedOf(type) { return getEquipped()[type]||null; }
 
 function hasUpgrade(id) { return isOwned(id) || false; }
 
+let pendingPurchase = null;
+let activeShopCat = 'upgrades';
+
+const SHOP_CATS = [
+  { id:'upgrades', label:'UPGRADES' },
+  { id:'ships',    label:'SHIPS' },
+  { id:'trails',   label:'TRAILS' },
+  { id:'effects',  label:'EFFECTS' },
+];
+
+function buildShopCats() {
+  const el = document.getElementById('shop-cats');
+  el.innerHTML = SHOP_CATS.map(c =>
+    `<div class="shop-cat ${activeShopCat===c.id?'active':''}" onclick="setShopCat('${c.id}')">${c.label}</div>`
+  ).join('');
+}
+
+function setShopCat(cat) {
+  activeShopCat = cat;
+  buildShop();
+}
+
 function buildShop() {
-  const grid = document.getElementById('shop-grid');
   const coins = getCoins();
   document.getElementById('shop-coin-display').textContent = coins;
+  buildShopCats();
+  const grid = document.getElementById('shop-grid');
   grid.innerHTML = '';
-  SHOP_ITEMS.forEach(item => {
-    const owned = isOwned(item.id);
-    const equipped = getEquippedOf(item.type) === item.id;
+  const items = SHOP_ITEMS.filter(i => i.cat === activeShopCat);
+  items.forEach(item => {
+    const owned = isOwned(item.id) || item.cost === 0;
+    const eqType = item.type === 'passive' ? null : item.type;
+    const equipped = eqType ? getEquippedOf(eqType) === item.id : false;
     const cantAfford = !owned && coins < item.cost;
     const div = document.createElement('div');
-    div.className = 'shop-item' + (owned?' owned':'') + (equipped?' equipped':'') + (cantAfford?' cant-afford':'');
+    const rarityClass = item.rarity === 'legendary' ? ' legendary' : item.rarity === 'rare' ? ' rare' : '';
+    div.className = 'shop-item' + rarityClass + (owned?' owned':'') + (equipped?' equipped':'') + (cantAfford?' cant-afford':'');
     div.innerHTML = `
       <div class="si-icon">${item.icon}</div>
+      <div class="si-rarity ${item.rarity}">${item.rarity.toUpperCase()}</div>
       <div class="si-name">${item.name}</div>
       <div class="si-desc">${item.desc}</div>
-      <div class="si-cost">${owned ? '' : '⬡ '+item.cost}</div>
-      ${owned && item.type==='skin' ? `<div class="si-badge ${equipped?'eq-badge':'owned-badge'}">${equipped?'ON':'EQUIP'}</div>` : ''}
-      ${owned && item.type!=='skin' ? `<div class="si-badge owned-badge">ACTIVE</div>` : ''}
+      <div class="si-cost">${owned && item.cost > 0 ? '' : item.cost > 0 ? '⬡ '+item.cost : 'FREE'}</div>
+      ${owned && eqType ? `<div class="si-badge ${equipped?'eq-badge':'owned-badge'}">${equipped?'ON':'EQUIP'}</div>` : ''}
+      ${owned && !eqType && item.cost > 0 ? `<div class="si-badge owned-badge">ACTIVE</div>` : ''}
     `;
-    if (!owned) {
-      div.onclick = () => {
-        if (getCoins() < item.cost) return;
-        if (spendCoins(item.cost)) {
-          addOwned(item.id);
-          if (item.type === 'skin') equip(item.type, item.id);
-          buildShop();
-        }
-      };
-    } else if (item.type === 'skin') {
-      div.onclick = () => { equip(item.type, item.id); buildShop(); };
+    if (!owned && item.cost > 0) {
+      div.onclick = () => openShopModal(item);
+    } else if (owned && eqType) {
+      div.onclick = () => { equip(eqType, item.id); buildShop(); };
+    } else if (item.cost === 0 && eqType) {
+      // free items: auto-own and equippable
+      if (!isOwned(item.id)) addOwned(item.id);
+      div.onclick = () => { equip(eqType, item.id); buildShop(); };
     }
     grid.appendChild(div);
   });
 }
 
+function openShopModal(item) {
+  pendingPurchase = item;
+  document.getElementById('sm-icon').textContent = item.icon;
+  document.getElementById('sm-name').textContent = item.name;
+  document.getElementById('sm-desc').textContent = item.desc;
+  document.getElementById('sm-cost').textContent = '⬡ ' + item.cost;
+  const canAfford = getCoins() >= item.cost;
+  const confirmBtn = document.getElementById('sm-confirm');
+  confirmBtn.textContent = canAfford ? 'BUY' : 'NOT ENOUGH';
+  confirmBtn.style.opacity = canAfford ? '1' : '0.4';
+  confirmBtn.style.pointerEvents = canAfford ? 'auto' : 'none';
+  document.getElementById('shop-modal').classList.add('open');
+}
+
+function closeShopModal() {
+  pendingPurchase = null;
+  document.getElementById('shop-modal').classList.remove('open');
+}
+
+function confirmPurchase() {
+  if (!pendingPurchase) return;
+  const item = pendingPurchase;
+  if (spendCoins(item.cost)) {
+    addOwned(item.id);
+    if (item.type !== 'passive') equip(item.type, item.id);
+    closeShopModal();
+    buildShop();
+  }
+}
+
+// close modal on backdrop click
+document.getElementById('shop-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeShopModal();
+});
+
 function switchTab(tab) {
-  document.querySelectorAll('.ttab').forEach((t,i) => {
-    const tabs = ['lb','shop','fb'];
-    t.classList.toggle('active', tabs[i]===tab);
-  });
+  const tabIds = ['lb','shop','fb'];
+  document.querySelectorAll('.ttab').forEach((t,i) => t.classList.toggle('active', tabIds[i]===tab));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
   if (tab==='shop') buildShop();
@@ -352,6 +496,55 @@ function initFirebase(cfg) {
     firebaseReady = true;
     return true;
   } catch(e) { console.warn('FB init:', e); firebaseReady=false; return false; }
+}
+
+const CREATOR_PASS = 'admin';
+let isAdmin = false;
+
+function checkCreatorPass() {
+  const pass = document.getElementById('cfg-pass').value;
+  const status = document.getElementById('cfg-pass-status');
+  const adminPanel = document.getElementById('admin-panel');
+  if (pass === CREATOR_PASS) {
+    isAdmin = true;
+    status.textContent = '⬡ CREATOR ACCESS GRANTED';
+    status.style.color = 'var(--orange)';
+    adminPanel.style.display = 'flex';
+  } else if (pass.length > 0) {
+    isAdmin = false;
+    status.textContent = 'INCORRECT PASSWORD';
+    status.style.color = 'var(--red)';
+    adminPanel.style.display = 'none';
+  } else {
+    isAdmin = false;
+    status.textContent = '';
+    adminPanel.style.display = 'none';
+  }
+}
+
+document.getElementById('cfg-pass').addEventListener('input', checkCreatorPass);
+
+async function adminClearBoard() {
+  if (!isAdmin) return;
+  const log = document.getElementById('admin-log');
+  if (!firebaseReady) { log.textContent = 'Firebase not connected.'; return; }
+  if (!confirm('Clear the entire global leaderboard?')) return;
+  try {
+    await db.ref('voidrunner/board').remove();
+    log.textContent = 'Leaderboard cleared.';
+    log.style.color = 'var(--green)';
+    loadLeaderboard();
+  } catch(e) { log.textContent = 'Error: '+e.message; log.style.color='var(--red)'; }
+}
+
+function adminResetScores() {
+  if (!isAdmin) return;
+  if (!confirm('Delete all locally stored scores?')) return;
+  localStorage.removeItem('vr_scores');
+  const log = document.getElementById('admin-log');
+  log.textContent = 'Local scores cleared.';
+  log.style.color = 'var(--green)';
+  loadLeaderboard();
 }
 
 function saveFirebaseConfig() {
@@ -478,6 +671,7 @@ let score=0, lives=3, speedMult=1, frame=0;
 let boostActive=false, boostCharge=100, boostDraining=false;
 let sessionCoins=0;
 let hitCooldown=0;
+let hazardShieldUsed=false;
 
 let player = { x:0, y:0, w:22, h:32, vx:0, trail:[] };
 let walls = [], hazards = [], particles = [];
@@ -500,9 +694,18 @@ function resizeCanvas() {
 }
 
 function initGameState() {
-  score=0; lives=hasUpgrade('shield')?4:3; speedMult=1; frame=0;
-  boostActive=false; boostCharge=hasUpgrade('boostplus')?150:100; boostDraining=false;
+  score=0;
+  let startLives = 3;
+  if(hasUpgrade('shield')) startLives++;
+  if(hasUpgrade('extralife')) startLives++;
+  lives = startLives;
+  speedMult=1; frame=0;
+  boostActive=false;
+  boostCharge=hasUpgrade('boostplus')?150:100;
+  if(hasUpgrade('startboost')) boostCharge = hasUpgrade('boostplus')?150:100; // full
+  boostDraining=false;
   sessionCoins=0; hitCooldown=0;
+  hazardShieldUsed = false;
   walls=[]; hazards=[]; particles=[];
   corridorW=canvas.width*0.55; targetCorridorW=corridorW;
   corridorLeft=(canvas.width-corridorW)/2; corridorRight=corridorLeft+corridorW;
@@ -568,7 +771,9 @@ function update() {
 
   // Corridor
   if(Math.random()<0.004) {
-    targetCorridorW = Math.max(canvas.width*0.28, corridorW-(20+Math.random()*40));
+    const minW = canvas.width*(hasUpgrade('narrowguard')?0.34:0.28);
+    const narrowAmt = hasUpgrade('narrowguard')?0.7:1;
+    targetCorridorW = Math.max(minW, corridorW-(20+Math.random()*40)*narrowAmt);
   }
   corridorW += (targetCorridorW-corridorW)*0.005;
   const drift = Math.sin(frame*0.003)*0.3;
@@ -586,7 +791,9 @@ function update() {
     // Coin collection (magnet = wider range)
     const magnetR = hasUpgrade('magnet') ? 50 : 14;
     if(w.hasCoin&&!w.coinCollected&&Math.abs(player.x-w.coinX)<magnetR&&Math.abs(player.y-w.y)<(hasUpgrade('magnet')?50:20)){
-      w.coinCollected=true; sessionCoins++; score+=50; frame+=83;
+      w.coinCollected=true;
+      const coinVal = hasUpgrade('coinboost') ? 2 : 1;
+      sessionCoins += coinVal; score+=50; frame+=83;
       spawnParticles(w.coinX,w.y,'#ffe500',6);
     }
     if(w.hasBoost&&!w.boostCollected&&Math.abs(player.x-w.boostX)<16&&Math.abs(player.y-w.y)<20){
@@ -645,9 +852,17 @@ function update() {
 
 function hitPlayer() {
   if(hitCooldown>0) return;
+  // Void Field: absorb first hazard hit
+  if(hasUpgrade('hazardshield') && !hazardShieldUsed) {
+    hazardShieldUsed = true;
+    hitCooldown = 30;
+    spawnParticles(player.x,player.y,'#aa44ff',12);
+    return;
+  }
   hitCooldown=50;
   lives--;
-  spawnParticles(player.x,player.y,'#ff2244',16);
+  const pCount = hasUpgrade('fx_explode') ? 32 : 16;
+  spawnParticles(player.x,player.y,'#ff2244',pCount);
   player.vx *= -1.2;
   if(lives<=0) endGame();
 }
@@ -678,12 +893,22 @@ function getShipColor() {
   const skin = getEquippedOf('skin');
   if(skin==='ship2') return boostActive?'#ffe500':'#ff4466';
   if(skin==='ship3') return `hsl(${frame*2%360},100%,65%)`;
+  if(skin==='ship4') return boostActive?'#fff':'#ffd700';
+  if(skin==='ship5') return `rgba(200,220,255,${0.15+Math.sin(frame*0.1)*0.1})`;
   return boostActive?'#ffe500':'#00f5ff';
 }
+function getShipAlpha() {
+  if(hasUpgrade('fx_ghost')) return 0.55;
+  const skin = getEquippedOf('skin');
+  if(skin==='ship5') return 0.25;
+  return 1;
+}
 function getTrailColor() {
-  const trail = getEquippedOf('skin');
+  const trail = getEquippedOf('trail');
   if(trail==='trail2') return '#ff8800';
   if(trail==='trail3') return '#4488ff';
+  if(trail==='trail4') return '#ffee00';
+  if(trail==='trail5') return `hsl(${frame*4%360},100%,65%)`;
   return boostActive?'#ffe500':'#00f5ff';
 }
 
@@ -794,8 +1019,9 @@ function draw() {
   const flash=hitCooldown>0&&Math.floor(hitCooldown/4)%2===0;
   if(!flash){
     const shipC=getShipColor();
+    const shipA=getShipAlpha();
     const px=player.x, py=player.y, pw=player.w, ph=player.h;
-    ctx.save();ctx.shadowColor=shipC;ctx.shadowBlur=20;ctx.fillStyle=shipC;
+    ctx.save();ctx.globalAlpha=shipA;ctx.shadowColor=shipC;ctx.shadowBlur=20;ctx.fillStyle=shipC;
     ctx.beginPath();
     ctx.moveTo(px,py-ph/2);
     ctx.lineTo(px+pw/2,py+ph/3);
@@ -813,9 +1039,17 @@ function draw() {
     exG.addColorStop(0,shipC);exG.addColorStop(1,'transparent');
     ctx.fillStyle=exG;ctx.shadowBlur=10;
     ctx.beginPath();ctx.ellipse(px,py+ph/2+exL/2,4,exL/2,0,0,Math.PI*2);ctx.fill();
-    // Shield ring if owned
+    // Shield ring if void field active
+    if(hasUpgrade('hazardshield')&&!hazardShieldUsed){
+      ctx.globalAlpha=shipA*(0.3+Math.sin(frame*.08)*.15);
+      ctx.strokeStyle='#aa44ff';ctx.lineWidth=2;
+      ctx.shadowColor='#aa44ff';ctx.shadowBlur=8;
+      ctx.beginPath();ctx.arc(px,py,pw+10,0,Math.PI*2);ctx.stroke();
+    }
+    // Shield ring (life shield)
     if(hasUpgrade('shield')&&lives>=4){
-      ctx.strokeStyle='rgba(0,255,136,.3)';ctx.lineWidth=1.5;
+      ctx.globalAlpha=shipA*0.25;
+      ctx.strokeStyle='rgba(0,255,136,.4)';ctx.lineWidth=1.5;
       ctx.beginPath();ctx.arc(px,py,pw+8,0,Math.PI*2);ctx.stroke();
     }
     ctx.restore();
@@ -823,6 +1057,15 @@ function draw() {
     if(boostActive){
       ctx.save();ctx.globalAlpha=.12;ctx.strokeStyle='#ffe500';ctx.lineWidth=1;
       for(let i=0;i<12;i++){const sx=Math.random()*W,sy=Math.random()*H,ln=20+Math.random()*40;ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(sx,sy+ln);ctx.stroke();}
+      ctx.restore();
+    }
+    // Screen glitch at high speed
+    if(hasUpgrade('fx_screen')&&speedMult>2.5&&Math.random()<0.04){
+      ctx.save();
+      ctx.globalAlpha=0.06+Math.random()*0.08;
+      ctx.fillStyle=Math.random()<0.5?'#00f5ff':'#ff00aa';
+      const gh=10+Math.random()*30, gy=Math.random()*H;
+      ctx.fillRect(0,gy,W,gh);
       ctx.restore();
     }
   }
