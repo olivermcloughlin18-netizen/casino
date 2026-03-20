@@ -198,7 +198,6 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
   <div class="title-tabs">
     <div class="ttab active" onclick="switchTab('lb')">LEADERBOARD</div>
     <div class="ttab" onclick="switchTab('shop')">SHOP</div>
-    <div class="ttab" onclick="switchTab('fb')">FIREBASE</div>
   </div>
 
   <!-- LEADERBOARD TAB -->
@@ -223,44 +222,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
     <div class="shop-grid" id="shop-grid"></div>
   </div>
 
-  <!-- FIREBASE TAB -->
-  <div class="tab-panel" id="tab-fb">
-    <div class="shop-topbar">
-      <button class="shop-back" onclick="switchTab('lb')">← BACK</button>
-    </div>
-    <div class="config-panel">
-      <div class="config-title">Firebase Realtime Database</div>
-      <div class="config-row">
-        <span class="config-label">Database URL</span>
-        <input class="config-input" id="cfg-url" placeholder="https://…firebaseio.com">
-      </div>
-      <div class="config-row">
-        <span class="config-label">API Key</span>
-        <input class="config-input" id="cfg-key" placeholder="AIzaSy…">
-      </div>
-      <div class="config-row">
-        <span class="config-label">Project ID</span>
-        <input class="config-input" id="cfg-proj" placeholder="my-project-id">
-      </div>
-      <div style="height:1px;background:var(--border);margin:4px 0"></div>
-      <div class="config-row">
-        <span class="config-label" style="color:var(--orange)">Creator Pass</span>
-        <input class="config-input" id="cfg-pass" type="password" placeholder="Admin only" style="border-color:rgba(255,140,0,.3)">
-      </div>
-      <div id="cfg-pass-status" style="font-size:9px;color:var(--muted);text-align:center;letter-spacing:1px"></div>
-      <button class="config-save" onclick="saveFirebaseConfig()">Save &amp; Connect</button>
-      <div id="admin-panel" style="display:none;flex-direction:column;gap:8px">
-        <div style="font-size:9px;letter-spacing:2px;color:var(--orange);text-align:center;border-top:1px solid rgba(255,140,0,.2);padding-top:8px">⬡ ADMIN PANEL</div>
-        <button class="config-save" style="border-color:var(--red);color:var(--red)" onclick="adminClearBoard()">Clear Leaderboard</button>
-        <button class="config-save" style="border-color:var(--orange);color:var(--orange)" onclick="adminResetScores()">Reset Local Scores</button>
-        <div id="admin-log" style="font-size:9px;color:var(--muted);text-align:center;min-height:14px"></div>
-      </div>
-      <div class="fb-note">
-        <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> → Realtime Database → Create → Test mode<br>
-        Scores saved locally without Firebase.
-      </div>
-    </div>
-  </div>
+
 </div>
 
 <!-- ══════════ GAME ══════════ -->
@@ -297,6 +259,22 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
   <div class="over-btns">
     <button class="btn-over" onclick="restartGame()">↺ RETRY</button>
     <button class="btn-over sec" onclick="goTitle()">⌂ MENU</button>
+  </div>
+</div>
+
+<!-- ADMIN MODAL (hidden, access via konami or secret) -->
+<div class="shop-modal" id="admin-modal">
+  <div class="shop-modal-box">
+    <div class="sm-icon">⬡</div>
+    <div class="sm-name" style="color:var(--orange)">ADMIN PANEL</div>
+    <input class="config-input" id="admin-pass-input" type="password" placeholder="Enter password" style="text-align:center;margin:4px 0" onkeydown="if(event.key==='Enter')checkAdminPass()">
+    <div id="admin-pass-status" style="font-size:9px;color:var(--muted);letter-spacing:1px;text-align:center"></div>
+    <div id="admin-actions" style="display:none;flex-direction:column;gap:8px;width:100%">
+      <button class="config-save" style="border-color:var(--red);color:var(--red)" onclick="adminClearBoard()">Clear Leaderboard</button>
+      <button class="config-save" style="border-color:var(--orange);color:var(--orange)" onclick="adminResetLocal()">Reset Local Scores</button>
+      <div id="admin-log" style="font-size:9px;color:var(--muted);text-align:center;min-height:14px"></div>
+    </div>
+    <button class="sm-btn cancel" onclick="document.getElementById('admin-modal').classList.remove('open');document.getElementById('admin-pass-input').value='';document.getElementById('admin-pass-status').textContent='';document.getElementById('admin-actions').style.display='none'">CLOSE</button>
   </div>
 </div>
 
@@ -461,14 +439,15 @@ function confirmPurchase() {
   }
 }
 
-// close modal on backdrop click
+// close modal on backdrop
 document.getElementById('shop-modal').addEventListener('click', function(e) {
   if (e.target === this) closeShopModal();
 });
 
 function switchTab(tab) {
-  const tabIds = ['lb','shop','fb'];
-  document.querySelectorAll('.ttab').forEach((t,i) => t.classList.toggle('active', tabIds[i]===tab));
+  document.querySelectorAll('.ttab').forEach((t,i) => {
+    t.classList.toggle('active', ['lb','shop'][i]===tab);
+  });
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
   if (tab==='shop') buildShop();
@@ -476,194 +455,176 @@ function switchTab(tab) {
 }
 
 // ═══════════════════════════════════
-//  FIREBASE
+//  FIREBASE — ALWAYS ON
 // ═══════════════════════════════════
-let db = null, firebaseReady = false;
-
-function loadFBConfig() {
-  try { return JSON.parse(localStorage.getItem('vr_fb')||'{}'); } catch { return {}; }
-}
-
-function initFirebase(cfg) {
-  if (!cfg.databaseURL || !cfg.apiKey) return false;
-  try {
-    // Delete existing apps
-    if (firebase.apps.length) {
-      firebase.apps.forEach(a => { try { a.delete(); } catch {} });
-    }
-    firebase.initializeApp({ apiKey:cfg.apiKey, databaseURL:cfg.databaseURL, projectId:cfg.projectId, authDomain:(cfg.projectId||'x')+'.firebaseapp.com' });
-    db = firebase.database();
-    firebaseReady = true;
-    return true;
-  } catch(e) { console.warn('FB init:', e); firebaseReady=false; return false; }
-}
-
-const BUILTIN_FB = {
+const FB_CONFIG = {
+  apiKey:      'AIzaSyArgUNCqTu95o8ki_P5rgRILzt-pbr7fvE',
   databaseURL: 'https://voidrunner-b3c4f-default-rtdb.firebaseio.com/',
-  apiKey: 'AIzaSyArgUNCqTu95o8ki_P5rgRILzt-pbr7fvE',
-  projectId: 'voidrunner-b3c4f',
+  projectId:   'voidrunner-b3c4f',
+  authDomain:  'voidrunner-b3c4f.firebaseapp.com',
 };
 
-const CREATOR_PASS = 'admin';
-let isAdmin = false;
+let db = null;
+let firebaseReady = false;
+let lbListener = null;
 
-function checkCreatorPass() {
-  const pass = document.getElementById('cfg-pass').value;
-  const status = document.getElementById('cfg-pass-status');
-  const adminPanel = document.getElementById('admin-panel');
-  if (pass === CREATOR_PASS) {
-    isAdmin = true;
-    status.textContent = '⬡ CREATOR ACCESS GRANTED';
-    status.style.color = 'var(--orange)';
-    adminPanel.style.display = 'flex';
-  } else if (pass.length > 0) {
-    isAdmin = false;
-    status.textContent = 'INCORRECT PASSWORD';
-    status.style.color = 'var(--red)';
-    adminPanel.style.display = 'none';
-  } else {
-    isAdmin = false;
-    status.textContent = '';
-    adminPanel.style.display = 'none';
+function initFirebase() {
+  try {
+    const app = firebase.apps.length
+      ? firebase.apps[0]
+      : firebase.initializeApp(FB_CONFIG);
+    db = firebase.database(app);
+    firebaseReady = true;
+    console.log('Firebase connected');
+    startLBListener();
+    return true;
+  } catch(e) {
+    console.error('Firebase init failed:', e);
+    firebaseReady = false;
+    return false;
   }
 }
 
-document.getElementById('cfg-pass').addEventListener('input', checkCreatorPass);
+// Real-time listener — leaderboard updates live on title screen
+function startLBListener() {
+  if (!firebaseReady || lbListener) return;
+  lbListener = db.ref('voidrunner/board')
+    .orderByChild('score')
+    .limitToLast(10)
+    .on('value', snap => {
+      const entries = [];
+      snap.forEach(c => entries.push(c.val()));
+      entries.sort((a,b) => b.score - a.score);
+      renderLeaderboard(entries);
+    }, err => console.warn('LB listener error:', err));
+}
+
+// Submit: one node per player name, only update if new score is higher
+async function submitScore(name, score) {
+  if (!firebaseReady) return;
+  try {
+    const key = name.replace(/[^a-zA-Z0-9_\-]/g, '_');
+    const ref = db.ref('voidrunner/board/' + key);
+    const snap = await ref.once('value');
+    const cur = snap.val();
+    if (!cur || score > cur.score) {
+      await ref.set({ name, score, ts: Date.now() });
+      console.log('Score submitted:', name, score);
+    } else {
+      console.log('Score not a PB, not submitting');
+    }
+  } catch(e) {
+    console.error('Submit failed:', e);
+  }
+}
+
+async function loadLeaderboard() {
+  if (!firebaseReady) {
+    document.getElementById('lb-status').textContent = 'CONNECTING...';
+    setTimeout(loadLeaderboard, 1000);
+    return;
+  }
+  try {
+    const snap = await db.ref('voidrunner/board').orderByChild('score').limitToLast(10).once('value');
+    const entries = [];
+    snap.forEach(c => entries.push(c.val()));
+    entries.sort((a,b) => b.score - a.score);
+    renderLeaderboard(entries);
+  } catch(e) {
+    console.warn('LB load error:', e);
+    document.getElementById('lb-status').textContent = 'ERROR';
+  }
+}
+
+function renderLeaderboard(entries) {
+  const list = document.getElementById('lb-list');
+  const playerName = (document.getElementById('name-input').value.trim()||playerNameGlobal||'').toUpperCase();
+  document.getElementById('lb-status').textContent = 'LIVE ●';
+  if (!entries || !entries.length) {
+    list.innerHTML = '<div class="lb-empty">NO SCORES YET — BE FIRST</div>';
+    return;
+  }
+  const icons = ['⬡','◇','△'];
+  list.innerHTML = entries.slice(0,10).map((e,i) => {
+    const rc = i===0?'r1':i===1?'r2':i===2?'r3':'ro';
+    const isYou = e.name === playerName;
+    return `<div class="lb-row">
+      <div class="lb-rank ${rc}">${icons[i]||i+1}</div>
+      <div class="lb-name ${isYou?'you':''}">${e.name}</div>
+      <div class="lb-score">${Number(e.score).toLocaleString()}</div>
+    </div>`;
+  }).join('');
+}
+
+async function refreshLiveLB() {
+  if (!firebaseReady) return;
+  try {
+    const snap = await db.ref('voidrunner/board').orderByChild('score').limitToLast(8).once('value');
+    const entries = [];
+    snap.forEach(c => entries.push(c.val()));
+    // Inject live player score
+    const pn = playerNameGlobal.toUpperCase();
+    const idx = entries.findIndex(e => e.name === pn);
+    if (idx >= 0) { if (score > entries[idx].score) entries[idx].score = score; }
+    else entries.push({ name: pn, score });
+    entries.sort((a,b) => b.score - a.score);
+    const cont = document.getElementById('live-lb-rows');
+    cont.innerHTML = entries.slice(0,7).map((e,i) => {
+      const isYou = e.name === pn;
+      return `<div class="live-row">
+        <div class="live-rank">${i+1}</div>
+        <div class="live-name ${isYou?'you':''}">${e.name.slice(0,8)}</div>
+        <div class="live-score">${Number(e.score).toLocaleString()}</div>
+      </div>`;
+    }).join('');
+  } catch(e) {}
+}
+
+// ── ADMIN ──
+const CREATOR_PASS = 'admin';
+let isAdmin = false;
+
+// Secret: triple-click the logo opens admin modal
+document.querySelector('.logo-main') && document.querySelector('.logo-main').addEventListener('click', (() => {
+  let clicks = 0;
+  return () => { clicks++; if(clicks===3){ clicks=0; document.getElementById('admin-modal').classList.add('open'); } setTimeout(()=>{clicks=0;},800); };
+})());
+
+function checkAdminPass() {
+  const pass = document.getElementById('admin-pass-input').value;
+  const status = document.getElementById('admin-pass-status');
+  const actions = document.getElementById('admin-actions');
+  if (pass === CREATOR_PASS) {
+    isAdmin = true;
+    status.textContent = '⬡ ACCESS GRANTED';
+    status.style.color = 'var(--orange)';
+    actions.style.display = 'flex';
+  } else {
+    isAdmin = false;
+    status.textContent = 'WRONG PASSWORD';
+    status.style.color = 'var(--red)';
+    actions.style.display = 'none';
+  }
+}
+
+document.getElementById('admin-pass-input').addEventListener('input', checkAdminPass);
 
 async function adminClearBoard() {
   if (!isAdmin) return;
   const log = document.getElementById('admin-log');
-  if (!firebaseReady) { log.textContent = 'Firebase not connected.'; return; }
   if (!confirm('Clear the entire global leaderboard?')) return;
   try {
     await db.ref('voidrunner/board').remove();
     log.textContent = 'Leaderboard cleared.';
     log.style.color = 'var(--green)';
-    loadLeaderboard();
   } catch(e) { log.textContent = 'Error: '+e.message; log.style.color='var(--red)'; }
 }
 
-function adminResetScores() {
+function adminResetLocal() {
   if (!isAdmin) return;
-  if (!confirm('Delete all locally stored scores?')) return;
-  localStorage.removeItem('vr_scores');
   const log = document.getElementById('admin-log');
-  log.textContent = 'Local scores cleared.';
+  log.textContent = 'Done.';
   log.style.color = 'var(--green)';
-  loadLeaderboard();
-}
-
-function saveFirebaseConfig() {
-  const cfg = {
-    databaseURL: document.getElementById('cfg-url').value.trim(),
-    apiKey: document.getElementById('cfg-key').value.trim(),
-    projectId: document.getElementById('cfg-proj').value.trim(),
-  };
-  localStorage.setItem('vr_fb', JSON.stringify(cfg));
-  if (initFirebase(cfg)) {
-    loadLeaderboard();
-    document.getElementById('lb-status').textContent = 'CONNECTED';
-    switchTab('lb');
-  } else {
-    alert('Invalid config — check URL and API key.');
-  }
-}
-
-// ── LEADERBOARD: store best score per player name only ──
-// Firebase structure: voidrunner/board/{NAME} = { name, score, ts }
-// One entry per player, only updated if new score is higher
-
-async function submitScore(name, score) {
-  // Local: keep best per name
-  const local = getLocalScores();
-  const existing = local.find(e => e.name === name);
-  if (!existing) {
-    local.push({ name, score });
-  } else if (score > existing.score) {
-    existing.score = score;
-  }
-  local.sort((a,b) => b.score - a.score);
-  localStorage.setItem('vr_scores', JSON.stringify(local.slice(0,200)));
-
-  if (!firebaseReady) return;
-  try {
-    // Use player name as key → one entry per player, no duplicates, no deletions
-    const ref = db.ref('voidrunner/board/' + name.replace(/[.#$\[\]]/g,'_'));
-    const snap = await ref.once('value');
-    const existing = snap.val();
-    if (!existing || score > existing.score) {
-      await ref.set({ name, score, ts: Date.now() });
-    }
-  } catch(e) { console.warn('Submit:', e); }
-}
-
-async function loadLeaderboard() {
-  renderLeaderboard(getLocalScores(), false);
-  if (!firebaseReady) { document.getElementById('lb-status').textContent='LOCAL'; return; }
-  try {
-    const snap = await db.ref('voidrunner/board').orderByChild('score').limitToLast(20).once('value');
-    const entries = [];
-    snap.forEach(c => entries.push(c.val()));
-    entries.sort((a,b) => b.score - a.score);
-    renderLeaderboard(entries, true);
-    document.getElementById('lb-status').textContent = 'LIVE ●';
-  } catch(e) { console.warn('LB load:', e); }
-}
-
-function getLocalScores() {
-  try { return JSON.parse(localStorage.getItem('vr_scores')||'[]'); } catch { return []; }
-}
-
-function renderLeaderboard(entries, live) {
-  const list = document.getElementById('lb-list');
-  const playerName = (document.getElementById('name-input').value.trim()||playerNameGlobal||'').toUpperCase();
-  if (!entries.length) { list.innerHTML='<div class="lb-empty">NO SCORES YET — BE FIRST</div>'; return; }
-  const icons = ['⬡','◇','△'];
-  list.innerHTML = entries.slice(0,10).map((e,i) => {
-    const rc = i===0?'r1':i===1?'r2':i===2?'r3':'ro';
-    const isYou = e.name===playerName;
-    return `<div class="lb-row">
-      <div class="lb-rank ${rc}">${icons[i]||i+1}</div>
-      <div class="lb-name ${isYou?'you':''}">${e.name}</div>
-      <div class="lb-score">${e.score.toLocaleString()}</div>
-    </div>`;
-  }).join('');
-  document.getElementById('lb-status').textContent = live ? 'LIVE ●' : 'LOCAL';
-}
-
-async function refreshLiveLB() {
-  const playerName = playerNameGlobal.toUpperCase();
-  let entries = getLocalScores().slice();
-  // Inject live score
-  const idx = entries.findIndex(e => e.name===playerName);
-  if (idx>=0) { if(score>entries[idx].score) entries[idx].score=score; }
-  else entries.push({name:playerName,score});
-  entries.sort((a,b)=>b.score-a.score);
-
-  if (firebaseReady) {
-    try {
-      const snap = await db.ref('voidrunner/board').orderByChild('score').limitToLast(8).once('value');
-      const fb = [];
-      snap.forEach(c=>fb.push(c.val()));
-      fb.sort((a,b)=>b.score-a.score);
-      // merge live
-      const fi = fb.findIndex(e=>e.name===playerName);
-      if(fi>=0){if(score>fb[fi].score)fb[fi].score=score;}
-      else fb.push({name:playerName,score});
-      fb.sort((a,b)=>b.score-a.score);
-      entries = fb;
-    } catch {}
-  }
-
-  const cont = document.getElementById('live-lb-rows');
-  cont.innerHTML = entries.slice(0,7).map((e,i) => {
-    const isYou = e.name===playerName;
-    return `<div class="live-row">
-      <div class="live-rank">${i+1}</div>
-      <div class="live-name ${isYou?'you':''}">${e.name.slice(0,8)}</div>
-      <div class="live-score">${e.score.toLocaleString()}</div>
-    </div>`;
-  }).join('');
 }
 
 // ═══════════════════════════════════
@@ -1122,7 +1083,6 @@ function goTitle() {
 
 async function endGame() {
   gameRunning=false; if(animId)cancelAnimationFrame(animId);
-  // Give coins earned this run
   addCoins(sessionCoins);
   const pbKey='vr_pb_'+playerNameGlobal;
   const pb=parseInt(localStorage.getItem(pbKey)||'0');
@@ -1131,16 +1091,22 @@ async function endGame() {
   document.getElementById('over-score').textContent=score.toLocaleString();
   document.getElementById('over-best').textContent=newPB.toLocaleString();
   document.getElementById('over-coins').textContent='+'+sessionCoins+' COINS (Total: '+getCoins()+')';
-  await submitScore(playerNameGlobal,score);
-  // Rank
-  const scores=getLocalScores();
-  const rank=scores.findIndex(e=>e.name===playerNameGlobal&&e.score>=score)+1;
-  const rm=document.getElementById('over-rank-msg');
-  if(rank===1)rm.textContent='⬡ NEW #1 ON THE BOARD';
-  else if(rank<=3)rm.textContent=`TOP ${rank} — ELITE`;
-  else if(rank<=10)rm.textContent=`RANK #${rank} GLOBALLY`;
-  else rm.textContent='';
+  document.getElementById('over-rank-msg').textContent='';
   showScreen('screen-over');
+  // Submit score then determine rank
+  await submitScore(playerNameGlobal, score);
+  try {
+    const snap = await db.ref('voidrunner/board').orderByChild('score').once('value');
+    const all = [];
+    snap.forEach(c => all.push(c.val()));
+    all.sort((a,b) => b.score - a.score);
+    const rank = all.findIndex(e => e.name === playerNameGlobal) + 1;
+    const rm = document.getElementById('over-rank-msg');
+    if(rank===1) rm.textContent='⬡ #1 IN THE WORLD';
+    else if(rank<=3) rm.textContent=`TOP ${rank} — ELITE`;
+    else if(rank<=10) rm.textContent=`RANK #${rank} GLOBALLY`;
+    else rm.textContent=`RANK #${rank}`;
+  } catch(e) {}
 }
 
 // ═══════════════════════════════════
@@ -1166,13 +1132,7 @@ window.addEventListener('resize',()=>{if(gameRunning)resizeCanvas();});
 // ═══════════════════════════════════
 //  BOOT
 // ═══════════════════════════════════
-const savedFB = loadFBConfig();
-// Use saved config if it exists, otherwise fall back to built-in
-const activeFB = (savedFB.databaseURL && savedFB.apiKey) ? savedFB : BUILTIN_FB;
-document.getElementById('cfg-url').value = activeFB.databaseURL || '';
-document.getElementById('cfg-key').value = activeFB.apiKey || '';
-document.getElementById('cfg-proj').value = activeFB.projectId || '';
-initFirebase(activeFB);
+initFirebase();
 loadLeaderboard();
 </script>
 </body>
