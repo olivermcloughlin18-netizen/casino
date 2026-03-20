@@ -498,6 +498,12 @@ function initFirebase(cfg) {
   } catch(e) { console.warn('FB init:', e); firebaseReady=false; return false; }
 }
 
+const BUILTIN_FB = {
+  databaseURL: 'https://voidrunner-b3c4f-default-rtdb.firebaseio.com/',
+  apiKey: 'AIzaSyArgUNCqTu95o8ki_P5rgRILzt-pbr7fvE',
+  projectId: 'voidrunner-b3c4f',
+};
+
 const CREATOR_PASS = 'admin';
 let isAdmin = false;
 
@@ -1160,13 +1166,13 @@ window.addEventListener('resize',()=>{if(gameRunning)resizeCanvas();});
 // ═══════════════════════════════════
 //  BOOT
 // ═══════════════════════════════════
-const savedFB=loadFBConfig();
-if(savedFB.databaseURL&&savedFB.apiKey){
-  document.getElementById('cfg-url').value=savedFB.databaseURL;
-  document.getElementById('cfg-key').value=savedFB.apiKey;
-  document.getElementById('cfg-proj').value=savedFB.projectId||'';
-  initFirebase(savedFB);
-}
+const savedFB = loadFBConfig();
+// Use saved config if it exists, otherwise fall back to built-in
+const activeFB = (savedFB.databaseURL && savedFB.apiKey) ? savedFB : BUILTIN_FB;
+document.getElementById('cfg-url').value = activeFB.databaseURL || '';
+document.getElementById('cfg-key').value = activeFB.apiKey || '';
+document.getElementById('cfg-proj').value = activeFB.projectId || '';
+initFirebase(activeFB);
 loadLeaderboard();
 </script>
 </body>
