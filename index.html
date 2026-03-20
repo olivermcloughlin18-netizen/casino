@@ -475,43 +475,55 @@ function initFirebase() {
       : firebase.initializeApp(FB_CONFIG);
     db = firebase.database(app);
     firebaseReady = true;
-    console.log('Firebase connected');
     startLBListener();
     return true;
   } catch(e) {
     console.error('Firebase init failed:', e);
+    document.getElementById('lb-status').textContent = 'FB ERROR';
     firebaseReady = false;
     return false;
   }
 }
 
-// Real-time listener — leaderboard updates live on title screen
+// Real-time listener — no limitToLast, never drops entries
 function startLBListener() {
   if (!firebaseReady || lbListener) return;
+  document.getElementById('lb-status').textContent = 'CONNECTING...';
   lbListener = db.ref('voidrunner/board')
-    .orderByChild('score')
-    .limitToLast(10)
     .on('value', snap => {
       const entries = [];
-      snap.forEach(c => entries.push(c.val()));
+      snap.forEach(c => {
+        const v = c.val();
+        if (v && v.name && v.score != null) entries.push(v);
+      });
       entries.sort((a,b) => b.score - a.score);
       renderLeaderboard(entries);
-    }, err => console.warn('LB listener error:', err));
+    }, err => {
+      console.error('LB listener error:', err.code, err.message);
+      document.getElementById('lb-status').textContent = 'RULES ERROR';
+      document.getElementById('lb-list').innerHTML =
+        `<div class="lb-empty" style="color:var(--red);font-size:9px">
+          DB RULES BLOCKED READ<br>
+          <span style="color:var(--muted)">Set rules to true in Firebase console</span>
+        </div>`;
+    });
 }
 
-// Submit: one node per player name, only update if new score is higher
+// Submit: key = sanitised name, value only ever updated upward — never deleted
 async function submitScore(name, score) {
   if (!firebaseReady) return;
   try {
-    const key = name.replace(/[^a-zA-Z0-9_\-]/g, '_');
+    // Key must be stable and match what we read back
+    const key = name.toUpperCase().replace(/[^A-Z0-9]/g, '_');
     const ref = db.ref('voidrunner/board/' + key);
     const snap = await ref.once('value');
     const cur = snap.val();
     if (!cur || score > cur.score) {
-      await ref.set({ name, score, ts: Date.now() });
+      // Store display name exactly as entered so it renders correctly
+      await ref.set({ name: name.toUpperCase(), score: score, ts: Date.now() });
       console.log('Score submitted:', name, score);
     } else {
-      console.log('Score not a PB, not submitting');
+      console.log('Not a PB, keeping existing:', cur.score);
     }
   } catch(e) {
     console.error('Submit failed:', e);
@@ -521,18 +533,26 @@ async function submitScore(name, score) {
 async function loadLeaderboard() {
   if (!firebaseReady) {
     document.getElementById('lb-status').textContent = 'CONNECTING...';
-    setTimeout(loadLeaderboard, 1000);
+    setTimeout(loadLeaderboard, 800);
     return;
   }
   try {
-    const snap = await db.ref('voidrunner/board').orderByChild('score').limitToLast(10).once('value');
+    const snap = await db.ref('voidrunner/board').once('value');
     const entries = [];
-    snap.forEach(c => entries.push(c.val()));
+    snap.forEach(c => {
+      const v = c.val();
+      if (v && v.name && v.score != null) entries.push(v);
+    });
     entries.sort((a,b) => b.score - a.score);
     renderLeaderboard(entries);
   } catch(e) {
-    console.warn('LB load error:', e);
-    document.getElementById('lb-status').textContent = 'ERROR';
+    console.error('LB load error:', e.code, e.message);
+    document.getElementById('lb-status').textContent = e.code || 'ERROR';
+    document.getElementById('lb-list').innerHTML =
+      `<div class="lb-empty" style="color:var(--red);font-size:9px">
+        ${e.code || 'LOAD ERROR'}<br>
+        <span style="color:var(--muted)">${e.message || 'Check Firebase rules'}</span>
+      </div>`;
   }
 }
 
@@ -559,10 +579,13 @@ function renderLeaderboard(entries) {
 async function refreshLiveLB() {
   if (!firebaseReady) return;
   try {
-    const snap = await db.ref('voidrunner/board').orderByChild('score').limitToLast(8).once('value');
+    const snap = await db.ref('voidrunner/board').once('value');
     const entries = [];
-    snap.forEach(c => entries.push(c.val()));
-    // Inject live player score
+    snap.forEach(c => {
+      const v = c.val();
+      if (v && v.name && v.score != null) entries.push(v);
+    });
+    // Inject current live score for this player
     const pn = playerNameGlobal.toUpperCase();
     const idx = entries.findIndex(e => e.name === pn);
     if (idx >= 0) { if (score > entries[idx].score) entries[idx].score = score; }
