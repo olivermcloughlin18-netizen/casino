@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="{{TAGLINE}} — {{CATEGORY}} in {{SUBURB}}, Melbourne." />
+  <meta name="keywords" content="{{SEO_KEYWORDS}}" />
+  <title>{{BUSINESS_NAME}} | {{CATEGORY}} {{SUBURB}}</title>
+  <style>
+    /* ── Reset & tokens ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --brand:    #1a5cff;
+      --brand-dk: #1244cc;
+      --accent:   #ff6b35;
+      --dark:     #0f172a;
+      --mid:      #334155;
+      --light:    #f8fafc;
+      --muted:    #64748b;
+      --border:   #e2e8f0;
+      --radius:   10px;
+      --shadow:   0 4px 24px rgba(0,0,0,.10);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: var(--dark);
+      background: #fff;
+      line-height: 1.65;
+    }
+
+    /* ── Utility ── */
+    .container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+    .btn {
+      display: inline-block;
+      padding: 14px 32px;
+      border-radius: var(--radius);
+      font-weight: 700;
+      font-size: 1rem;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform .15s, box-shadow .15s;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.15); }
+    .btn-primary { background: var(--brand); color: #fff; }
+    .btn-primary:hover { background: var(--brand-dk); }
+    .btn-outline { background: transparent; border: 2px solid #fff; color: #fff; }
+    .btn-outline:hover { background: rgba(255,255,255,.12); }
+    .section-label {
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--brand);
+      margin-bottom: 8px;
+    }
+    .section-title {
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 800;
+      line-height: 1.2;
+      color: var(--dark);
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255,255,255,.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 0;
+    }
+    nav .inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .nav-brand {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--dark);
+      text-decoration: none;
+    }
+    .nav-links { display: flex; gap: 28px; list-style: none; }
+    .nav-links a {
+      font-size: .9rem;
+      font-weight: 500;
+      color: var(--mid);
+      text-decoration: none;
+      transition: color .15s;
+    }
+    .nav-links a:hover { color: var(--brand); }
+    .nav-cta { white-space: nowrap; }
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+    }
+
+    /* ── Hero ── */
+    #hero {
+      background: linear-gradient(135deg, #0f172a 0%, #1a3a6b 60%, #1a5cff 100%);
+      color: #fff;
+      padding: 96px 0 80px;
+      position: relative;
+      overflow: hidden;
+    }
+    #hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .hero-inner { position: relative; max-width: 680px; }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 50px;
+      padding: 6px 14px;
+      font-size: .8rem;
+      font-weight: 600;
+      letter-spacing: .04em;
+      margin-bottom: 20px;
+    }
+    #hero h1 {
+      font-size: clamp(2.2rem, 6vw, 3.6rem);
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+    #hero .tagline {
+      font-size: 1.15rem;
+      opacity: .85;
+      margin-bottom: 14px;
+      max-width: 560px;
+    }
+    #hero .hero-desc {
+      font-size: 1rem;
+      opacity: .72;
+      margin-bottom: 36px;
+      max-width: 520px;
+    }
+    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+    .hero-trust {
+      margin-top: 48px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+      opacity: .75;
+      font-size: .85rem;
+    }
+    .hero-trust span { display: flex; align-items: center; gap: 6px; }
+
+    /* ── Services ── */
+    #services { padding: 80px 0; background: var(--light); }
+    #services .header { text-align: center; margin-bottom: 48px; }
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+    }
+    .service-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .service-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow);
+    }
+    .service-icon {
+      font-size: 2rem;
+      margin-bottom: 12px;
+    }
+    .service-card h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--dark);
+    }
+    .service-card p {
+      font-size: .9rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ── About ── */
+    #about {
+      padding: 80px 0;
+      background: #fff;
+    }
+    .about-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+    @media (max-width: 720px) {
+      .about-inner { grid-template-columns: 1fr; gap: 32px; }
+    }
+    .about-text p { color: var(--mid); margin-bottom: 16px; }
+    .about-visual {
+      background: linear-gradient(135deg, var(--brand) 0%, #1a3a6b 100%);
+      border-radius: 16px;
+      aspect-ratio: 4/3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      gap: 12px;
+    }
+    .about-visual .big-number {
+      font-size: 4rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .about-visual .big-label {
+      font-size: .9rem;
+      opacity: .8;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .stat-row {
+      display: flex;
+      gap: 32px;
+      margin-top: 28px;
+      flex-wrap: wrap;
+    }
+    .stat { text-align: left; }
+    .stat .val { font-size: 1.8rem; font-weight: 800; color: var(--brand); }
+    .stat .lbl { font-size: .8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+
+    /* ── Reviews ── */
+    #reviews {
+      padding: 80px 0;
+      background: var(--light);
+    }
+    #reviews .header { text-align: center; margin-bottom: 48px; }
+    .stars { color: #f59e0b; font-size: 1.2rem; letter-spacing: 2px; }
+    .review-summary {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .review-score { font-size: 4rem; font-weight: 900; color: var(--dark); line-height: 1; }
+    .review-count { font-size: .9rem; color: var(--muted); }
+
+    /* ── Location & Hours ── */
+    #location { padding: 80px 0; background: #fff; }
+    .location-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: start;
+    }
+    @media (max-width: 720px) {
+      .location-inner { grid-template-columns: 1fr; }
+    }
+    .location-info h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 20px; }
+    .info-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+    .info-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 2px; }
+    .info-text { font-size: .95rem; color: var(--mid); }
+    .info-text strong { color: var(--dark); display: block; margin-bottom: 2px; }
+    .hours-table { width: 100%; border-collapse: collapse; font-size: .9rem; margin-top: 8px; }
+    .hours-table td { padding: 6px 0; color: var(--mid); }
+    .hours-table td:first-child { font-weight: 600; color: var(--dark); width: 50%; }
+    .map-wrap { border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+
+    /* ── CTA Banner ── */
+    #cta {
+      padding: 80px 0;
+      background: linear-gradient(135deg, #0f172a 0%, #1a5cff 100%);
+      color: #fff;
+      text-align: center;
+    }
+    #cta h2 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 900; margin-bottom: 12px; }
+    #cta p { font-size: 1.05rem; opacity: .8; margin-bottom: 36px; max-width: 480px; margin-left: auto; margin-right: auto; }
+    .cta-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+    /* ── Footer ── */
+    footer {
+      background: var(--dark);
+      color: rgba(255,255,255,.5);
+      padding: 32px 0;
+      text-align: center;
+      font-size: .85rem;
+    }
+    footer strong { color: rgba(255,255,255,.85); }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="container inner">
+      <a href="#hero" class="nav-brand">{{BUSINESS_NAME}}</a>
+      <ul class="nav-links">
+        <li><a href="#services">Services</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#location">Find Us</a></li>
+      </ul>
+      <a href="tel:{{PHONE}}" class="btn btn-primary nav-cta" style="padding:10px 22px;font-size:.88rem;">
+        📞 Call Now
+      </a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="container">
+      <div class="hero-inner">
+        <div class="hero-badge">📍 {{SUBURB}}, Melbourne</div>
+        <h1>{{BUSINESS_NAME}}</h1>
+        <p class="tagline">{{TAGLINE}}</p>
+        <p class="hero-desc">{{HERO_DESC}}</p>
+        <div class="hero-actions">
+          <a href="tel:{{PHONE}}" class="btn btn-primary">{{CTA_TEXT}}</a>
+          <a href="#services" class="btn btn-outline">Our Services</a>
+        </div>
+        <div class="hero-trust">
+          <span>✅ Locally owned</span>
+          <span>⭐ {{RATING}} stars on Google</span>
+          <span>🗺️ {{SUBURB}}, Melbourne</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section id="services">
+    <div class="container">
+      <div class="header">
+        <p class="section-label">What We Offer</p>
+        <h2 class="section-title">Our Services</h2>
+      </div>
+      <div class="services-grid">
+        {{SERVICES_HTML}}
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div class="container">
+      <div class="about-inner">
+        <div class="about-text">
+          <p class="section-label">Our Story</p>
+          <h2 class="section-title" style="margin-bottom:20px;">About {{BUSINESS_NAME}}</h2>
+          <p>{{ABOUT}}</p>
+          <div class="stat-row">
+            <div class="stat">
+              <div class="val">{{REVIEWS}}+</div>
+              <div class="lbl">Google Reviews</div>
+            </div>
+            <div class="stat">
+              <div class="val">{{RATING}}★</div>
+              <div class="lbl">Average Rating</div>
+            </div>
+            <div class="stat">
+              <div class="val">{{SUBURB}}</div>
+              <div class="lbl">Location</div>
+            </div>
+          </div>
+          <br />
+          <a href="tel:{{PHONE}}" class="btn btn-primary">{{CTA_TEXT}}</a>
+        </div>
+        <div class="about-visual">
+          <div class="big-number">{{RATING}}★</div>
+          <div class="big-label">Google Rating</div>
+          <div style="opacity:.6;font-size:.85rem;">{{REVIEWS}} reviews</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOCATION & HOURS -->
+  <section id="location">
+    <div class="container">
+      <div class="location-inner">
+        <div class="location-info">
+          <h2>Find Us</h2>
+
+          <div class="info-row">
+            <div class="info-icon">📍</div>
+            <div class="info-text">
+              <strong>Address</strong>
+              {{ADDRESS}}
+            </div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-icon">📞</div>
+            <div class="info-text">
+              <strong>Phone</strong>
+              <a href="tel:{{PHONE}}" style="color:var(--brand);text-decoration:none;">{{PHONE}}</a>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-icon">🕐</div>
+            <div class="info-text">
+              <strong>Opening Hours</strong>
+              {{HOURS_HTML}}
+            </div>
+          </div>
+        </div>
+
+        <div class="map-wrap">
+          {{MAPS_EMBED}}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA BANNER -->
+  <section id="cta">
+    <div class="container">
+      <h2>Ready to get started?</h2>
+      <p>Give us a call or drop by — we'd love to help you out.</p>
+      <div class="cta-actions">
+        <a href="tel:{{PHONE}}" class="btn btn-primary">📞 {{PHONE}}</a>
+        <a href="#location" class="btn btn-outline">Get Directions</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <p><strong>{{BUSINESS_NAME}}</strong> · {{ADDRESS}} · {{PHONE}}</p>
+      <p style="margin-top:6px;">© 2025 {{BUSINESS_NAME}}. All rights reserved.</p>
+    </div>
+  </footer>
+
+</body>
+</html>
